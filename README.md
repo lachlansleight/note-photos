@@ -11,3 +11,4 @@ Right now, it's under construction. The intended list of features is:
 -   [ ] Bulk metadata editor
 -   [ ] Nicer photo display, grouped by month or category with tags filter (include or exclude)
 -   [ ] Exposed API to link with WeekLog, Mountaineer, etc.
+-   [ ] Ensure internal delete API route also deletes files from FB storage

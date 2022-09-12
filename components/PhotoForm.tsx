@@ -107,9 +107,14 @@ const PhotoForm = ({
                         value={dateString}
                         onChange={s => {
                             setDateString(s);
+                            const t = dayjs();
+                            const d = dayjs(s, "DD/MM/YYYY");
+                            d.set("hour", t.get("hour"));
+                            d.set("minute", t.get("minute"));
+                            d.set("second", t.get("second"));
                             setNoteImage(cur => ({
                                 ...cur,
-                                date: dayjs(s, "DD/MM/YYYY").toDate(),
+                                date: d.toDate(),
                             }));
                         }}
                     />

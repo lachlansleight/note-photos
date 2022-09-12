@@ -13,7 +13,9 @@ const PhotosPage = (): JSX.Element => {
         const doLoad = async () => {
             setLoading(true);
             const result = await axios("/api/images");
-            const newImages = Object.keys(result.data.images).map(k => result.data.images[k]);
+            const newImages = Object.keys(result.data.images)
+                .map(k => result.data.images[k])
+                .sort((a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf());
             //for(let i = 0; i < 30; i++) {
             //    newImages.push({...newImages[i % newImages.length], id: i});
             //}
