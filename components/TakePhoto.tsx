@@ -11,11 +11,16 @@ const TakePhoto = ({ onPhoto }: { onPhoto: (file: File, url: string) => void }):
 
     return (
         <div className="h-48 grid place-items-center">
+            <label className="text-4xl px-8 py-2 bg-primary-800 rounded" htmlFor="photo">
+                Take Photo
+            </label>
             <input
-                className="text-4xl"
+                id="photo"
+                className="text-2xl"
                 type="file"
                 accept="image/*"
                 capture="environment"
+                hidden={true}
                 onChange={e => {
                     if (e.target.files == null) return;
                     if (e.target.files.length === 0) return;
