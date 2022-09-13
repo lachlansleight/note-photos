@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { NoteImage } from "lib/types";
+import initFirebase from "lib/initFirebase";
+import FirebaseUtils from "lib/FirebaseUtils";
 
 export const getImage = async (id: string): Promise<NoteImage> => {
     try {
@@ -43,7 +46,7 @@ export const patchImage = async (
 ): Promise<void> => {
     try {
         await axios.patch(
-            `${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/images/${image.id}.json?auth=${idToken}`,
+            `${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/images/${id}.json?auth=${idToken}`,
             image
         );
     } catch (error: any) {
@@ -53,10 +56,18 @@ export const patchImage = async (
 
 export const deleteImage = async (id: string, idToken: string): Promise<void> => {
     try {
+        //we do this first as it will fail if the id token is invalid
         await axios.delete(
             `${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/images/${id}.json?auth=${idToken}`
         );
+
+        initFirebase();
+        const auth = getAuth();
+        await signInWithEmailAndPassword(auth, process.env.FB_USER || "", process.env.FB_PW || "");
+        await FirebaseUtils.deleteFile(`images/${id}`);
+        await FirebaseUtils.deleteFile(`thumbnails/${id}`);
     } catch (error: any) {
+        console.error(error);
         throw new Error(error.message);
     }
 };

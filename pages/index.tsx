@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import dayjs from "dayjs";
-import Link from "next/link";
 import Layout from "components/layout/Layout";
 import { NoteImage } from "lib/types";
+import ImageTile from "components/ImageTile";
+import useAuth from "lib/hooks/useAuth";
 
 const PhotosPage = (): JSX.Element => {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<NoteImage[]>([]);
 
@@ -25,6 +26,19 @@ const PhotosPage = (): JSX.Element => {
         doLoad();
     }, []);
 
+    const deleteImage = useCallback(
+        (id: string) => {
+            const doDelete = async () => {
+                if (!user) return;
+                await axios.delete(`/api/image?id=${id}&auth=${user.token}`);
+            };
+            if (!user) return;
+            setImages(images.filter(i => i.id !== id));
+            doDelete();
+        },
+        [user]
+    );
+
     return (
         <Layout>
             {loading ? (
@@ -33,34 +47,9 @@ const PhotosPage = (): JSX.Element => {
                 </div>
             ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                    {images.map(i => {
-                        return (
-                            <Link key={i.id} href={`/image/${i.id}`}>
-                                <a className="relative border border-white border-opacity-0 hover:border-opacity-100">
-                                    <div
-                                        style={{
-                                            paddingBottom: "100%",
-                                            backgroundImage: `url(${i.thumbnailUrl})`,
-                                            backgroundSize: "contain",
-                                            backgroundPosition: "center center",
-                                            backgroundRepeat: "no-repeat",
-                                        }}
-                                    />
-                                    {/* <img className="w-full h-full object-fit" src={i.thumbnailUrl} alt={i.category} /> */}
-                                    <div
-                                        className="absolute left-0 top-0 w-full h-full flex flex-col justify-between text-center"
-                                        style={{
-                                            background:
-                                                "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.7) 100%)",
-                                        }}
-                                    >
-                                        <p>{dayjs(i.date).format("DD/MM/YYYY")}</p>
-                                        <p>{i.category}</p>
-                                    </div>
-                                </a>
-                            </Link>
-                        );
-                    })}
+                    {images.map(i => (
+                        <ImageTile key={i.id} image={i} onDelete={deleteImage} />
+                    ))}
                 </div>
             )}
         </Layout>

@@ -133,7 +133,7 @@ const PhotoForm = ({
                         value={noteImage.note || ""}
                         onChange={s => setNoteImage(cur => ({ ...cur, note: s }))}
                     />
-                    <div className="flex flex-col gap-4 pl-24">
+                    <div className="flex flex-col gap-4 pl-24 mt-8">
                         <Button
                             className="px-2 py-1 rounded bg-primary-800 text-lg"
                             onClick={upload}
@@ -141,7 +141,7 @@ const PhotoForm = ({
                             Upload
                         </Button>
                         <Button
-                            className="mx-24 px-2 py-1 rounded bg-red-800 bg-opacity-50 text-md"
+                            className="mx-12 px-2 py-1 rounded bg-red-800 bg-opacity-50 text-md"
                             onClick={() => {
                                 if (!window.confirm("Discard photo and all entered data?")) return;
                                 if (onCancel) onCancel();
@@ -150,7 +150,6 @@ const PhotoForm = ({
                             Cancel
                         </Button>
                     </div>
-                    <pre>{JSON.stringify(noteImage, null, 2)}</pre>
                 </div>
             )}
             {phase === "uploading" && (
