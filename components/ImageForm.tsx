@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import CustomParseFormat from "dayjs/plugin/customParseFormat";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LocalNoteImage } from "lib/types";
 import TagsField from "./controls/TagsField";
 import TextField from "./controls/TextField";
@@ -33,6 +33,8 @@ const PhotoForm = ({
     const imgRef = useRef<HTMLImageElement>(null);
 
     const [url, setUrl] = useState("");
+    const [dateString, setDateString] = useState(dayjs(value.date).format("DD/MM/YYYY"));
+    const isValid = useMemo(() => dayjs(dateString, "DD/MM/YYYY").isValid(), [dateString]);
 
     useEffect(() => {
         if (file == null) return;
@@ -53,6 +55,13 @@ const PhotoForm = ({
             });
         }, 250);
     }, [file, imgRef]);
+
+    useEffect(() => {
+        const isValid = dayjs(dateString, "DD/MM/YYYY").isValid();
+        if (isValid) {
+            onChange({ ...value, date: dayjs(dateString, "DD/MM/YYYY").startOf("day").toDate() });
+        }
+    }, [dateString]);
 
     return (
         <div>
@@ -96,13 +105,7 @@ const PhotoForm = ({
             </div>
             <div className="flex flex-col gap-2 mt-8">
                 {error && <p className="text-red-300">{error}</p>}
-                <DateOffsetField
-                    label="Date"
-                    value={dayjs(value.date).format("DD/MM/YYYY")}
-                    onChange={s =>
-                        onChange({ ...value, date: dayjs(s, "DD/MM/YYYY").startOf("day").toDate() })
-                    }
-                />
+                <DateOffsetField label="Date" value={dateString} onChange={setDateString} />
                 <TextField
                     label="Category"
                     value={value.category}
@@ -120,7 +123,9 @@ const PhotoForm = ({
                 />
                 <div className="flex flex-col gap-4 pl-24 mt-8">
                     <Button
-                        className="px-2 py-1 rounded bg-primary-800 text-lg"
+                        className={`px-2 py-1 rounded text-lg ${
+                            isValid ? "bg-primary-800" : "bg-gray-500"
+                        }`}
                         onClick={() => {
                             if (onSubmit) onSubmit();
                         }}

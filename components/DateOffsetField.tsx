@@ -17,19 +17,19 @@ const DateOffsetField = ({
     onChange?: (value: string) => void;
     type?: string;
 }): JSX.Element => {
+    const isValid = useMemo(() => {
+        return dayjs(value, "DD/MM/YYYY").isValid();
+    }, [value]);
+
     const decrement = useCallback(() => {
         if (!onChange) return;
-        onChange(dayjs(value, "DD/MM/YYYY").startOf("day").subtract(1, "day").format("DD/MM/YYYY"));
+        onChange(dayjs(value, "DD/MM/YYYY").startOf("day").add(1, "day").format("DD/MM/YYYY"));
     }, [value, onChange]);
 
     const increment = useCallback(() => {
         if (!onChange) return;
         onChange(dayjs(value, "DD/MM/YYYY").startOf("day").add(1, "day").format("DD/MM/YYYY"));
     }, [value, onChange]);
-
-    const isValid = useMemo(() => {
-        return dayjs(value, "DD/MM/YYYY").isValid();
-    }, [value]);
 
     return (
         <div className={`w-full flex items-center ${className}`}>

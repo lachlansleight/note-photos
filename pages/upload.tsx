@@ -5,7 +5,7 @@ import CustomParseFormat from "dayjs/plugin/customParseFormat";
 import axios from "axios";
 import { FaCheckCircle, FaSync } from "react-icons/fa";
 import Layout from "components/layout/Layout";
-import PhotoForm from "components/PhotoForm";
+import PhotoForm from "components/ImageForm";
 import { LocalNoteImage, NoteImage } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import FirebaseUtils from "lib/FirebaseUtils";

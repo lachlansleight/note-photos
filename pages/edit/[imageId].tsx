@@ -6,7 +6,7 @@ import { FaCheckCircle, FaSync } from "react-icons/fa";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { useRouter } from "next/router";
 import Layout from "components/layout/Layout";
-import PhotoForm from "components/PhotoForm";
+import PhotoForm from "components/ImageForm";
 import { NoteImage } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import { getImage } from "pages/api/image";
