@@ -14,6 +14,11 @@ const PhotosPage = (): JSX.Element => {
         const doLoad = async () => {
             setLoading(true);
             const result = await axios("/api/images");
+            if (!result?.data?.images) {
+                setImages([]);
+                setLoading(false);
+                return;
+            }
             const newImages = Object.keys(result.data.images)
                 .map(k => result.data.images[k])
                 .sort((a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf());
@@ -45,11 +50,15 @@ const PhotosPage = (): JSX.Element => {
                 <div className="grid place-items-center h-48">
                     <p className="text-4xl">Loading...</p>
                 </div>
-            ) : (
+            ) : images.length > 0 ? (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                     {images.map(i => (
                         <ImageTile key={i.id} image={i} onDelete={deleteImage} />
                     ))}
+                </div>
+            ) : (
+                <div className="h-48 grid place-items-center w-full">
+                    <p className="text-4xl">No images yet!</p>
                 </div>
             )}
         </Layout>
