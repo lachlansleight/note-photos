@@ -157,7 +157,6 @@ const UploadPage = (): JSX.Element => {
                     </div>
                 </div>
             )}
-            <pre>{JSON.stringify(newImage, null, 2)}</pre>
         </Layout>
     );
 };
