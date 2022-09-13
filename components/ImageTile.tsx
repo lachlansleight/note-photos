@@ -19,7 +19,7 @@ const ImageTile = ({
 
     return (
         <div
-            className="relative border border-white border-opacity-0 hover:border-opacity-100 select-none"
+            className="relative border border-white border-opacity-0 hover:border-opacity-100 select-none cursor-pointer"
             onClick={() => {
                 if (!menu) router.push(`/image/${image.id}`);
             }}

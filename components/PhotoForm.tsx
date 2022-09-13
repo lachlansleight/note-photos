@@ -18,15 +18,17 @@ const PhotoForm = ({
     onSubmit,
     error = "",
     canChangeFile = true,
+    knownUrl = "",
 }: {
     value: LocalNoteImage;
     onChange: (image: LocalNoteImage) => void;
-    file: File | null;
-    onFileChange: (file: File) => void;
+    file?: File | null;
+    onFileChange?: (file: File) => void;
     onCancel?: () => void;
     onSubmit?: () => void;
     error?: string;
     canChangeFile?: boolean;
+    knownUrl?: string;
 }): JSX.Element => {
     const imgRef = useRef<HTMLImageElement>(null);
 
@@ -56,10 +58,10 @@ const PhotoForm = ({
         <div>
             <div className="w-full h-48 relative -mt-4">
                 <img
-                    src={url}
+                    src={knownUrl || url}
                     ref={imgRef}
                     className={`absolute left-0 top-0 h-full w-full z-0 object-cover rounded-bl-lg rounded-br-lg ${
-                        url ? "" : "hidden"
+                        knownUrl || url ? "" : "hidden"
                     }`}
                 />
                 <div className="absolute left-0 top-0 h-full w-full z-10 grid place-items-center">
@@ -81,10 +83,12 @@ const PhotoForm = ({
                                 onChange={e => {
                                     if (e.target.files == null) return;
                                     if (e.target.files.length === 0) return;
-                                    onFileChange(e.target.files[0]);
+                                    if (onFileChange) onFileChange(e.target.files[0]);
                                 }}
                             />
                         </>
+                    ) : knownUrl || url ? (
+                        <></>
                     ) : (
                         <p className="text-2xl">No image file!</p>
                     )}
