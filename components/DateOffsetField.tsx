@@ -23,12 +23,12 @@ const DateOffsetField = ({
 
     const decrement = useCallback(() => {
         if (!onChange) return;
-        onChange(dayjs(value, "DD/MM/YYYY").startOf("day").add(1, "day").format("DD/MM/YYYY"));
+        onChange(dayjs(value, "DD/MM/YYYY").subtract(1, "day").startOf("day").format("DD/MM/YYYY"));
     }, [value, onChange]);
 
     const increment = useCallback(() => {
         if (!onChange) return;
-        onChange(dayjs(value, "DD/MM/YYYY").startOf("day").add(1, "day").format("DD/MM/YYYY"));
+        onChange(dayjs(value, "DD/MM/YYYY").add(1, "day").startOf("day").format("DD/MM/YYYY"));
     }, [value, onChange]);
 
     return (
