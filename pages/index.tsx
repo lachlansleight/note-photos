@@ -21,7 +21,7 @@ const PhotosPage = (): JSX.Element => {
             }
             const newImages = Object.keys(result.data.images)
                 .map(k => result.data.images[k])
-                .sort((a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf());
+                .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf());
             //for(let i = 0; i < 30; i++) {
             //    newImages.push({...newImages[i % newImages.length], id: i});
             //}
@@ -39,7 +39,7 @@ const PhotosPage = (): JSX.Element => {
             };
             if (!user) return;
             setImages(
-                images.filter(i => i.id !== id).sort((a, b) => b.date.valueOf() - a.date.valueOf())
+                images.filter(i => i.id !== id).sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf())
             );
             doDelete();
         },
