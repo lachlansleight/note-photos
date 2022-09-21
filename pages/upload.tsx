@@ -16,7 +16,7 @@ const UploadPage = (): JSX.Element => {
     const { user } = useAuth();
     const [file, setFile] = useState<File | null>(null);
     const [newImage, setNewImage] = useState<LocalNoteImage>({
-        category: "unsorted",
+        category: "",
         tags: [],
         width: 0,
         height: 0,
