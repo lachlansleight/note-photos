@@ -31,7 +31,7 @@ const UploadPage = (): JSX.Element => {
 
     const restart = () => {
         setNewImage(cur => ({
-            category: "unsorted",
+            category: "",
             tags: [],
             width: 0,
             height: 0,

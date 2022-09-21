@@ -109,6 +109,7 @@ const PhotoForm = ({
                 <TextField
                     label="Category"
                     value={value.category}
+                    placeholder={"Unsorted"}
                     onChange={s => onChange({ ...value, category: s })}
                 />
                 <TagsField

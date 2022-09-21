@@ -25,7 +25,7 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
         size: image.size || 0,
         type: image.type || "",
         date: image.date || dayjs().startOf("day").toDate(),
-        category: image.category || "",
+        category: (image.category === "unsorted" ? "" : image.category) || "",
         tags: image.tags || [],
         note: image.note || "",
     });
