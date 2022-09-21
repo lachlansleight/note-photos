@@ -38,7 +38,9 @@ const PhotosPage = (): JSX.Element => {
                 await axios.delete(`/api/image?id=${id}&auth=${user.token}`);
             };
             if (!user) return;
-            setImages(images.filter(i => i.id !== id));
+            setImages(
+                images.filter(i => i.id !== id).sort((a, b) => b.date.valueOf() - a.date.valueOf())
+            );
             doDelete();
         },
         [user]
