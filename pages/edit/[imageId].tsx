@@ -10,6 +10,7 @@ import PhotoForm from "components/ImageForm";
 import { NoteImage } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import { getImage } from "pages/api/image";
+import FirebaseUtils from "lib/FirebaseUtils";
 
 dayjs.extend(CustomParseFormat);
 
@@ -30,6 +31,7 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
         note: image.note || "",
     });
     const [error, setError] = useState("");
+    const [file, setFile] = useState<{ file: Blob; thumbnail: Blob } | null>(null);
     const [phase, setPhase] = useState<"form" | "uploading" | "done">("form");
     const [uploadCount, setUploadCount] = useState(0);
 
@@ -48,6 +50,21 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
             setUploadCount(0);
 
             try {
+                let url = newImage.url;
+                let thumbnailUrl = newImage.thumbnailUrl;
+                if (file) {
+                    url = await FirebaseUtils.uploadBytes(file.file, `/images/${newImage.id}`);
+                    console.log({ uploadedUrl: url });
+                    setUploadCount(1);
+                    thumbnailUrl = await FirebaseUtils.uploadBytes(
+                        file.thumbnail,
+                        `/thumbnails/${newImage.id}`
+                    );
+                    setUploadCount(2);
+                    console.log(thumbnailUrl);
+                } else {
+                    setUploadCount(2);
+                }
                 const finalDate = dayjs(newImage.date);
                 finalDate.set("hour", dayjs().hour());
                 finalDate.set("minute", dayjs().minute());
@@ -56,10 +73,12 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
                     ...newImage,
                     date: finalDate.toDate(),
                     category: newImage.category || "unsorted",
+                    url,
+                    thumbnailUrl,
                 };
                 console.log({ toUpload });
                 await axios.patch(`/api/image?id=${newImage.id}&auth=${user.token}`, toUpload);
-                setUploadCount(1);
+                setUploadCount(3);
 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -72,7 +91,7 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
         };
 
         doUpload();
-    }, [newImage, user]);
+    }, [newImage, user, file]);
 
     return (
         <Layout>
@@ -80,11 +99,15 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
                 <PhotoForm
                     value={newImage}
                     onChange={val => setNewImage(cur => ({ ...cur, ...val }))}
+                    onFileChange={data => {
+                        console.log("Changed!");
+                        setFile(data);
+                    }}
                     onCancel={() => router.push(`/image/${image.id}`)}
                     onSubmit={upload}
                     error={error}
-                    canChangeFile={false}
-                    knownUrl={newImage.url}
+                    canChangeFile={true}
+                    knownId={newImage.id}
                 />
             )}
             {phase === "uploading" && (
@@ -96,7 +119,7 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
                             <div
                                 className="absolute z-0 left-0 top-0 h-full bg-primary-900"
                                 style={{
-                                    width: `${(100 * uploadCount) / 1}%`,
+                                    width: `${(100 * uploadCount) / 3}%`,
                                     transition: "all 0.3s",
                                 }}
                             />

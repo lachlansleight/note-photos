@@ -60,12 +60,12 @@ const ImageTile = ({
                     </div>
                     {menu ? (
                         <div className="flex flex-col gap-2 px-4 py-2">
-                            <button
-                                className="bg-blue-800 bg-opacity-70 font-bold py-0.5 rounded"
-                                onClick={() => router.push(`/edit/${image.id}`)}
+                            <a
+                                href={`/edit/${image.id}`}
+                                className="bg-blue-800 bg-opacity-70 font-bold py-0.5 rounded grid place-items-center"
                             >
                                 Edit
-                            </button>
+                            </a>
                             <button
                                 className="bg-red-800 bg-opacity-70 font-bold py-0.5 rounded"
                                 onClick={() => {

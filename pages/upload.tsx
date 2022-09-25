@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import * as imageConversion from "image-conversion";
 import dayjs from "dayjs";
 import CustomParseFormat from "dayjs/plugin/customParseFormat";
 import axios from "axios";
@@ -14,7 +13,7 @@ dayjs.extend(CustomParseFormat);
 
 const UploadPage = (): JSX.Element => {
     const { user } = useAuth();
-    const [file, setFile] = useState<File | null>(null);
+    const [file, setFile] = useState<{ file: Blob; thumbnail: Blob } | null>(null);
     const [newImage, setNewImage] = useState<LocalNoteImage>({
         category: "",
         tags: [],
@@ -69,19 +68,14 @@ const UploadPage = (): JSX.Element => {
                     .id;
                 console.log({ newId });
                 setUploadCount(1);
-                const uploadedUrl = await FirebaseUtils.uploadBytes(file, `/images/${newId}`);
+                const uploadedUrl = await FirebaseUtils.uploadBytes(file.file, `/images/${newId}`);
                 console.log({ uploadedUrl });
                 setUploadCount(2);
-                const thumbnailBlob = await imageConversion.compressAccurately(file, {
-                    size: 100,
-                    type: imageConversion.EImageType.JPEG,
-                });
-                setUploadCount(3);
                 const uploadedThumbnailUrl = await FirebaseUtils.uploadBytes(
-                    thumbnailBlob,
+                    file.thumbnail,
                     `/thumbnails/${newId}`
                 );
-                setUploadCount(4);
+                setUploadCount(3);
                 console.log(uploadedThumbnailUrl);
                 const finalDate = dayjs(newImage.date);
                 finalDate.set("hour", dayjs().hour());
@@ -97,7 +91,7 @@ const UploadPage = (): JSX.Element => {
                 };
                 console.log({ toUpload });
                 await axios.put(`/api/image?auth=${user.token}`, toUpload);
-                setUploadCount(5);
+                setUploadCount(4);
 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -135,7 +129,7 @@ const UploadPage = (): JSX.Element => {
                             <div
                                 className="absolute z-0 left-0 top-0 h-full bg-primary-900"
                                 style={{
-                                    width: `${(100 * uploadCount) / 5}%`,
+                                    width: `${(100 * uploadCount) / 4}%`,
                                     transition: "all 0.3s",
                                 }}
                             />
