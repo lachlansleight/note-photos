@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import dayjs from "dayjs";
 import Layout from "components/layout/Layout";
 import { NoteImage } from "lib/types";
-import ImageTile from "components/ImageTile";
-import useAuth from "lib/hooks/useAuth";
+// import ImageTile from "components/ImageTile";
+// import useAuth from "lib/hooks/useAuth";
 import Pagination from "components/Pagination";
 import SelectField from "components/SelectField";
 import NoteImageLoader from "components/NoteImageLoader";
 import useDimensions from "lib/hooks/useDimensions";
+import CalendarView from "components/CalendarView";
 
 const PhotosPage = (): JSX.Element => {
-    const { user } = useAuth();
+    // const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<NoteImage[]>([]);
     const [filteredImages, setFilteredImages] = useState<NoteImage[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [filterCategory, setFilterCategory] = useState("");
-    const [showingGrid, setShowingGrid] = useState(false);
+    // const [showingGrid, setShowingGrid] = useState(false);
     const { width } = useDimensions();
     const [page, setPage] = useState(0);
 
@@ -58,22 +60,22 @@ const PhotosPage = (): JSX.Element => {
         setPage(Math.ceil(newFilteredImages.length / 2));
     }, [images, filterCategory]);
 
-    const deleteImage = useCallback(
-        (id: string) => {
-            const doDelete = async () => {
-                if (!user) return;
-                await axios.delete(`/api/image?id=${id}&auth=${user.token}`);
-            };
-            if (!user) return;
-            setImages(
-                images
-                    .filter(i => i.id !== id)
-                    .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf())
-            );
-            doDelete();
-        },
-        [user]
-    );
+    // const deleteImage = useCallback(
+    //     (id: string) => {
+    //         const doDelete = async () => {
+    //             if (!user) return;
+    //             await axios.delete(`/api/image?id=${id}&auth=${user.token}`);
+    //         };
+    //         if (!user) return;
+    //         setImages(
+    //             images
+    //                 .filter(i => i.id !== id)
+    //                 .sort((a, b) => new Date(b.date).valueOf() - new Date(a.date).valueOf())
+    //         );
+    //         doDelete();
+    //     },
+    //     [user]
+    // );
 
     const categorySelectOptions = useMemo(() => {
         const options: { value: number; label: string }[] = [];
@@ -95,7 +97,25 @@ const PhotosPage = (): JSX.Element => {
         return options;
     }, [images, categories]);
 
-    console.log(width);
+    const goToPageOf = useCallback(
+        (date: Date) => {
+            const d = dayjs(date);
+            let targetPage = 0;
+            for (let i = 0; i < images.length; i += 2) {
+                if (dayjs(images[i].date).isSame(d, "day")) {
+                    targetPage = Math.ceil(i / 2);
+                    break;
+                }
+                if (i >= images.length - 1) continue;
+                if (dayjs(images[i + 1].date).isSame(d, "day")) {
+                    targetPage = Math.ceil((i + 1) / 2);
+                    break;
+                }
+            }
+            setPage(targetPage);
+        },
+        [images]
+    );
 
     return (
         <Layout>
@@ -156,8 +176,14 @@ const PhotosPage = (): JSX.Element => {
                                 : undefined
                         }
                     />
+
+                    <div className="flex-col justify-center hidden md:flex">
+                        <CalendarView year={2022} values={filteredImages} onDayClick={goToPageOf} />
+                        <CalendarView year={2021} values={filteredImages} onDayClick={goToPageOf} />
+                    </div>
+
                     {/* <NoteFixup notes={images} /> */}
-                    <p className="mt-8 text-xl mb-2">
+                    {/* <p className="mt-8 text-xl mb-2">
                         Grid{" "}
                         <span
                             onClick={() => setShowingGrid(cur => !cur)}
@@ -172,7 +198,7 @@ const PhotosPage = (): JSX.Element => {
                                 <ImageTile key={i.id} image={i} onDelete={deleteImage} />
                             ))}
                         </div>
-                    )}
+                    )} */}
                 </div>
             ) : (
                 // <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">

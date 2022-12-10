@@ -264,7 +264,6 @@ const PhotoForm = ({
                     {error && <p className="text-center text-red-300">{error}</p>}
                 </div>
             </div>
-            <pre>{JSON.stringify({ naturalDimensions, finalDimensions }, null, 2)}</pre>
         </div>
     );
 };
