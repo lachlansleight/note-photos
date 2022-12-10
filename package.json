@@ -1,14 +1,14 @@
 {
     "name": "note-photos",
     "author": "@LachlanSleight",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "scripts": {
         "dev": "next dev -p 3095",
         "build": "next build",
         "type-check": "tsc --pretty --noEmit",
         "format": "prettier --write .",
         "lint": "eslint . --ext ts --ext tsx --ext js",
-        "combo": "format && lint && type-check",
+        "combo": "npm run format && npm run lint && npm run type-check",
         "test": "jest",
         "test:watch": "jest --watchAll"
     },

@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
+import Head from "next/head";
 import Layout from "components/layout/Layout";
 import { NoteImage } from "lib/types";
 // import ImageTile from "components/ImageTile";
 // import useAuth from "lib/hooks/useAuth";
 import Pagination from "components/Pagination";
 import SelectField from "components/SelectField";
-import NoteImageLoader from "components/NoteImageLoader";
 import useDimensions from "lib/hooks/useDimensions";
 import CalendarView from "components/CalendarView";
+import NoteImageBuffer from "components/NoteImageBuffer";
 
 const PhotosPage = (): JSX.Element => {
     // const { user } = useAuth();
@@ -125,6 +126,36 @@ const PhotosPage = (): JSX.Element => {
                 </div>
             ) : filteredImages.length > 0 ? (
                 <div>
+                    <Head>
+                        {page > 0 && (
+                            <link
+                                rel="preload"
+                                as="image"
+                                href={filteredImages[(page - 1) * 2 - 2].url}
+                            />
+                        )}
+                        {page > 0 && (
+                            <link
+                                rel="preload"
+                                as="image"
+                                href={filteredImages[(page - 1) * 2 - 1].url}
+                            />
+                        )}
+                        {page < Math.ceil(filteredImages.length / 2) && (
+                            <link
+                                rel="preload"
+                                as="image"
+                                href={filteredImages[(page + 1) * 2 - 2].url}
+                            />
+                        )}
+                        {page < Math.ceil(filteredImages.length / 2) && (
+                            <link
+                                rel="preload"
+                                as="image"
+                                href={filteredImages[(page + 1) * 2 - 1].url}
+                            />
+                        )}
+                    </Head>
                     <SelectField
                         label="Category"
                         value={categories.indexOf(filterCategory)}
@@ -132,9 +163,9 @@ const PhotosPage = (): JSX.Element => {
                         onChange={val => setFilterCategory(val === -1 ? "" : categories[val])}
                     />
                     <div className="grid grid-cols-2 gap-2 mb-8">
-                        <NoteImageLoader note={filteredImages[page * 2 - 2]} width={500} />
+                        <NoteImageBuffer note={filteredImages[page * 2 - 2]} width={500} />
                         {filteredImages.length > page * 2 - 1 ? (
-                            <NoteImageLoader note={filteredImages[page * 2 - 1]} width={500} />
+                            <NoteImageBuffer note={filteredImages[page * 2 - 1]} width={500} />
                         ) : (
                             <div />
                         )}
@@ -180,6 +211,8 @@ const PhotosPage = (): JSX.Element => {
                     <div className="flex-col justify-center hidden md:flex">
                         <CalendarView year={2022} values={filteredImages} onDayClick={goToPageOf} />
                         <CalendarView year={2021} values={filteredImages} onDayClick={goToPageOf} />
+                        <CalendarView year={2020} values={filteredImages} onDayClick={goToPageOf} />
+                        <CalendarView year={2019} values={filteredImages} onDayClick={goToPageOf} />
                     </div>
 
                     {/* <NoteFixup notes={images} /> */}
