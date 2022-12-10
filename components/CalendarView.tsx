@@ -34,6 +34,54 @@ const CalendarView = ({
         [minDay]
     );
 
+    const cells = useMemo(() => {
+        return Array.from({ length: dayCount }).map((_, i) => {
+            const day = dayjs(minDay).add(i, "day");
+            const dateValues = values.filter(v => dayjs(v.date).isSame(day, "day"));
+            const tier =
+                dateValues.length < 3
+                    ? 0
+                    : dateValues.length > 4
+                    ? 3
+                    : dateValues.length === 3
+                    ? 1
+                    : 2;
+            const opacity = tier === 0 ? dateValues.length / 3 : 1;
+            return (
+                <div
+                    key={i}
+                    className={`w-3 h-3 bg-neutral-800 border-white border-opacity-40 ${
+                        dateValues.length > 0
+                            ? "cursor-pointer hover:bg-neutral-700 hover:border"
+                            : ""
+                    }`}
+                    title={`${day.format("DD MMMM YY")}${
+                        dateValues.length > 0 ? ` - ${dateValues.length} pages` : ""
+                    }`}
+                    onClick={() => {
+                        if (onDayClick && dateValues.length > 0) onDayClick(day.toDate());
+                    }}
+                >
+                    <div
+                        className={`w-full h-full ${
+                            tier === 0
+                                ? "bg-indigo-600"
+                                : tier === 1
+                                ? "bg-violet-500"
+                                : tier === 2
+                                ? "bg-pink-400"
+                                : "bg-pink-500"
+                        }`}
+                        style={{
+                            opacity: opacity,
+                        }}
+                    />
+                    {/* {day.format("D/MM")} */}
+                </div>
+            );
+        });
+    }, [year, values, onDayClick]);
+
     return (
         // <div className="grid grid-cols-4">
         //     {Array.from({length: 12}).map((_, i) => {
@@ -203,52 +251,7 @@ const CalendarView = ({
                             width: "calc(0.75rem * 53 + 0.125rem * 52)",
                         }}
                     >
-                        {Array.from({ length: dayCount }).map((_, i) => {
-                            const day = dayjs(minDay).add(i, "day");
-                            const dateValues = values.filter(v => dayjs(v.date).isSame(day, "day"));
-                            const tier =
-                                dateValues.length < 3
-                                    ? 0
-                                    : dateValues.length > 4
-                                    ? 3
-                                    : dateValues.length === 3
-                                    ? 1
-                                    : 2;
-                            const opacity = tier === 0 ? dateValues.length / 3 : 1;
-                            return (
-                                <div
-                                    key={i}
-                                    className={`w-3 h-3 bg-neutral-800 border-white border-opacity-40 ${
-                                        dateValues.length > 0
-                                            ? "cursor-pointer hover:bg-neutral-700 hover:border"
-                                            : ""
-                                    }`}
-                                    title={`${day.format("DD MMMM YY")}${
-                                        dateValues.length > 0 ? ` - ${dateValues.length} pages` : ""
-                                    }`}
-                                    onClick={() => {
-                                        if (onDayClick && dateValues.length > 0)
-                                            onDayClick(day.toDate());
-                                    }}
-                                >
-                                    <div
-                                        className={`w-full h-full ${
-                                            tier === 0
-                                                ? "bg-indigo-600"
-                                                : tier === 1
-                                                ? "bg-violet-500"
-                                                : tier === 2
-                                                ? "bg-pink-400"
-                                                : "bg-pink-500"
-                                        }`}
-                                        style={{
-                                            opacity: opacity,
-                                        }}
-                                    />
-                                    {/* {day.format("D/MM")} */}
-                                </div>
-                            );
-                        })}
+                        {cells}
                     </div>
                 </div>
             </div>
