@@ -27,9 +27,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             throw new Error(`${req.method} not supported for /images`);
         }
     } catch (error: any) {
-        const parsedError = error.message || error;
-        if (req.method) console.error(`Failed to ${req.method} images`, parsedError.message);
-        else console.error("Failed on image request", parsedError.message);
+        const parsedError = error.message;
+        if (req.method) console.error(`Failed to ${req.method} images`, parsedError);
+        else console.error("Failed on image request", parsedError);
+        if (!parsedError) console.error(error);
         if (statusCode === 200) statusCode = 500;
         res.status(statusCode).json({
             success: false,
