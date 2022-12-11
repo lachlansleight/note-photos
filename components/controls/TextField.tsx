@@ -14,8 +14,8 @@ const TextField = ({
     type?: string;
 }): JSX.Element => {
     return (
-        <div className={`w-full flex items-center ${className}`}>
-            <label className="w-24">{label}</label>
+        <div className={`w-full flex flex-col ${className}`}>
+            <label className="w-24 text-xs">{label}</label>
             <input
                 type={type}
                 className="flex-grow bg-neutral-700 rounded px-2 py-1"

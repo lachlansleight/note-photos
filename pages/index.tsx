@@ -3,7 +3,7 @@ import axios from "axios";
 import dayjs from "dayjs";
 import Head from "next/head";
 import Layout from "components/layout/Layout";
-import { NoteImage } from "lib/types";
+import { ImageHasCategory, NoteImage } from "lib/types";
 // import ImageTile from "components/ImageTile";
 // import useAuth from "lib/hooks/useAuth";
 import Pagination from "components/Pagination";
@@ -17,7 +17,6 @@ const PhotosPage = (): JSX.Element => {
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<NoteImage[]>([]);
     const [filteredImages, setFilteredImages] = useState<NoteImage[]>([]);
-    const [categories, setCategories] = useState<string[]>([]);
     const [filterCategory, setFilterCategory] = useState("");
     // const [showingGrid, setShowingGrid] = useState(false);
     const { width } = useDimensions();
@@ -32,20 +31,18 @@ const PhotosPage = (): JSX.Element => {
                 setLoading(false);
                 return;
             }
-            const newImages = Object.keys(result.data.images)
+            console.log(result.data);
+            const newImages: NoteImage[] = Object.keys(result.data.images)
                 .map(k => result.data.images[k])
-                .sort((a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf());
+                .sort(
+                    (a, b) =>
+                        new Date(a.projects[0].date).valueOf() -
+                        new Date(b.projects[0].date).valueOf()
+                );
             //for(let i = 0; i < 30; i++) {
             //    newImages.push({...newImages[i % newImages.length], id: i});
             //}
-            setCategories(
-                newImages.reduce((acc, image) => {
-                    if (acc.indexOf(image.category) === -1) {
-                        acc.push(image.category);
-                    }
-                    return acc;
-                }, [])
-            );
+            console.log({ newImages });
             setImages(newImages);
             setPage(Math.ceil(newImages.length / 2));
             setLoading(false);
@@ -53,12 +50,27 @@ const PhotosPage = (): JSX.Element => {
         doLoad();
     }, []);
 
+    const categories = useMemo(() => {
+        return images.reduce((acc: string[], image) => {
+            for (let i = 0; i < image.projects.length; i++) {
+                if (acc.indexOf(image.projects[i].name) === -1) {
+                    acc.push(image.projects[i].name);
+                }
+            }
+            return acc;
+        }, []);
+    }, [images]);
+
     useEffect(() => {
         const newFilteredImages = images.filter(
-            image => filterCategory === "" || image.category === filterCategory
+            image => filterCategory === "" || ImageHasCategory(image, filterCategory)
         );
-        setFilteredImages(newFilteredImages);
-        setPage(Math.ceil(newFilteredImages.length / 2));
+        setFilteredImages(cur => {
+            if (cur.length !== newFilteredImages.length) {
+                setPage(Math.ceil(newFilteredImages.length / 2));
+            }
+            return newFilteredImages;
+        });
     }, [images, filterCategory]);
 
     // const deleteImage = useCallback(
@@ -84,14 +96,14 @@ const PhotosPage = (): JSX.Element => {
         categories
             .sort(
                 (a, b) =>
-                    images.filter(image => image.category === b).length -
-                    images.filter(image => image.category === a).length
+                    images.filter(image => ImageHasCategory(image, b)).length -
+                    images.filter(image => ImageHasCategory(image, a)).length
             )
             .forEach((category, i) => {
                 options.push({
                     value: i,
                     label: `${category} (${
-                        images.filter(image => image.category === category).length
+                        images.filter(image => ImageHasCategory(image, category)).length
                     } notes)`,
                 });
             });
@@ -101,22 +113,38 @@ const PhotosPage = (): JSX.Element => {
     const goToPageOf = useCallback(
         (date: Date) => {
             const d = dayjs(date);
-            let targetPage = 0;
-            for (let i = 0; i < images.length; i += 2) {
-                if (dayjs(images[i].date).isSame(d, "day")) {
-                    targetPage = Math.ceil(i / 2);
-                    break;
+            let targetPage = -1;
+            for (let i = 0; i < filteredImages.length; i += 2) {
+                for (let j = 0; j < filteredImages[i].projects.length; j++) {
+                    if (dayjs(filteredImages[i].projects[j].date).isSame(d, "day")) {
+                        targetPage = Math.ceil(i / 2);
+                        break;
+                    }
+                    if (targetPage >= 0) break;
                 }
-                if (i >= images.length - 1) continue;
-                if (dayjs(images[i + 1].date).isSame(d, "day")) {
-                    targetPage = Math.ceil((i + 1) / 2);
-                    break;
+                if (i >= filteredImages.length - 1) continue;
+                for (let j = 0; j < filteredImages[i + 1].projects.length; j++) {
+                    if (dayjs(filteredImages[i + 1].projects[j].date).isSame(d, "day")) {
+                        targetPage = Math.ceil((i + 1) / 2);
+                        break;
+                    }
+                    if (targetPage >= 0) break;
                 }
             }
             setPage(targetPage);
         },
-        [images]
+        [filteredImages]
     );
+
+    const allDates = useMemo(() => {
+        const dates: { date: Date }[] = [];
+        filteredImages.forEach(image => {
+            image.projects.forEach(project => {
+                dates.push({ date: project.date });
+            });
+        });
+        return dates;
+    }, [filteredImages]);
 
     return (
         <Layout>
@@ -127,28 +155,28 @@ const PhotosPage = (): JSX.Element => {
             ) : filteredImages.length > 0 ? (
                 <div>
                     <Head>
-                        {page > 0 && (
+                        {(page - 1) * 2 - 2 > 0 && (
                             <link
                                 rel="preload"
                                 as="image"
                                 href={filteredImages[(page - 1) * 2 - 2].url}
                             />
                         )}
-                        {page > 0 && (
+                        {(page - 1) * 2 - 1 > 0 && (
                             <link
                                 rel="preload"
                                 as="image"
                                 href={filteredImages[(page - 1) * 2 - 1].url}
                             />
                         )}
-                        {page < Math.ceil(filteredImages.length / 2) && (
+                        {filteredImages.length > (page + 1) * 2 - 2 && (
                             <link
                                 rel="preload"
                                 as="image"
                                 href={filteredImages[(page + 1) * 2 - 2].url}
                             />
                         )}
-                        {page < Math.ceil(filteredImages.length / 2) && (
+                        {filteredImages.length > (page + 1) * 2 - 1 && (
                             <link
                                 rel="preload"
                                 as="image"
@@ -163,9 +191,23 @@ const PhotosPage = (): JSX.Element => {
                         onChange={val => setFilterCategory(val === -1 ? "" : categories[val])}
                     />
                     <div className="grid grid-cols-2 gap-2 mb-8">
-                        <NoteImageBuffer note={filteredImages[page * 2 - 2]} width={500} />
+                        <NoteImageBuffer
+                            note={filteredImages[page * 2 - 2]}
+                            width={500}
+                            onEditSuccess={v => {
+                                setImages(cur => cur.map(i => (i.id === v.id ? v : i)));
+                                setFilteredImages(cur => cur.map(i => (i.id === v.id ? v : i)));
+                            }}
+                        />
                         {filteredImages.length > page * 2 - 1 ? (
-                            <NoteImageBuffer note={filteredImages[page * 2 - 1]} width={500} />
+                            <NoteImageBuffer
+                                note={filteredImages[page * 2 - 1]}
+                                width={500}
+                                onEditSuccess={v => {
+                                    setImages(cur => cur.map(i => (i.id === v.id ? v : i)));
+                                    setFilteredImages(cur => cur.map(i => (i.id === v.id ? v : i)));
+                                }}
+                            />
                         ) : (
                             <div />
                         )}
@@ -209,10 +251,10 @@ const PhotosPage = (): JSX.Element => {
                     />
 
                     <div className="flex-col justify-center hidden md:flex">
-                        <CalendarView year={2022} values={filteredImages} onDayClick={goToPageOf} />
-                        <CalendarView year={2021} values={filteredImages} onDayClick={goToPageOf} />
-                        <CalendarView year={2020} values={filteredImages} onDayClick={goToPageOf} />
-                        <CalendarView year={2019} values={filteredImages} onDayClick={goToPageOf} />
+                        <CalendarView year={2022} values={allDates} onDayClick={goToPageOf} />
+                        <CalendarView year={2021} values={allDates} onDayClick={goToPageOf} />
+                        <CalendarView year={2020} values={allDates} onDayClick={goToPageOf} />
+                        <CalendarView year={2019} values={allDates} onDayClick={goToPageOf} />
                     </div>
 
                     {/* <NoteFixup notes={images} /> */}

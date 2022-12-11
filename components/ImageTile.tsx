@@ -40,8 +40,8 @@ const ImageTile = ({
                         "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.7) 100%)",
                 }}
             >
-                <p>{dayjs(image.date).format("DD/MM/YYYY")}</p>
-                <p>{image.category}</p>
+                <p>{dayjs(image.projects[0].date).format("DD/MM/YYYY")}</p>
+                <p>{image.projects[0].name}</p>
             </div>
             {user && (
                 <div

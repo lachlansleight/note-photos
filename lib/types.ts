@@ -3,10 +3,7 @@ export interface LocalNoteImage {
     height: number;
     size: number;
     type: string;
-    date: Date;
-    category: string;
-    tags: string[];
-    note?: string;
+    projects: Project[];
 }
 
 export interface NoteImage extends LocalNoteImage {
@@ -14,3 +11,11 @@ export interface NoteImage extends LocalNoteImage {
     url: string;
     thumbnailUrl: string;
 }
+
+export interface Project {
+    date: Date;
+    name: string;
+}
+
+export const ImageHasCategory = (image: NoteImage, category: string) =>
+    image.projects.findIndex(p => p.name === category) !== -1;

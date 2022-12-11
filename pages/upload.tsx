@@ -15,14 +15,16 @@ const UploadPage = (): JSX.Element => {
     const { user } = useAuth();
     const [file, setFile] = useState<{ file: Blob; thumbnail: Blob } | null>(null);
     const [newImage, setNewImage] = useState<LocalNoteImage>({
-        category: "",
-        tags: [],
         width: 0,
         height: 0,
         size: 0,
         type: "none",
-        note: "",
-        date: dayjs().startOf("day").toDate(),
+        projects: [
+            {
+                name: "",
+                date: dayjs().startOf("day").toDate(),
+            },
+        ],
     });
     const [error, setError] = useState("");
     const [phase, setPhase] = useState<"form" | "uploading" | "done">("form");
@@ -30,14 +32,16 @@ const UploadPage = (): JSX.Element => {
 
     const restart = () => {
         setNewImage(cur => ({
-            category: "",
-            tags: [],
             width: 0,
             height: 0,
             size: 0,
             type: "none",
-            note: "",
-            date: cur.date,
+            projects: [
+                {
+                    name: "",
+                    date: cur.projects[0].date,
+                },
+            ],
         }));
         setError("");
         setFile(null);
@@ -54,9 +58,11 @@ const UploadPage = (): JSX.Element => {
             setError("No file!");
             return;
         }
-        if (!dayjs(newImage.date).isValid()) {
-            setError("Invalid date!");
-            return;
+        for (let i = 0; i < newImage.projects.length; i++) {
+            if (!dayjs(newImage.projects[i].date).isValid()) {
+                setError("Invalid date!");
+                return;
+            }
         }
         setError("");
         const doUpload = async () => {
@@ -77,17 +83,22 @@ const UploadPage = (): JSX.Element => {
                 );
                 setUploadCount(3);
                 console.log(uploadedThumbnailUrl);
-                const finalDate = dayjs(newImage.date);
-                finalDate.set("hour", dayjs().hour());
-                finalDate.set("minute", dayjs().minute());
-                finalDate.set("second", dayjs().second());
+                const getFinalDate = (date: Date) => {
+                    const finalDate = dayjs(date);
+                    finalDate.set("hour", dayjs().hour());
+                    finalDate.set("minute", dayjs().minute());
+                    finalDate.set("second", dayjs().second());
+                    return finalDate.toDate();
+                };
                 const toUpload: NoteImage = {
                     ...newImage,
-                    date: finalDate.toDate(),
-                    id: newId,
+                    projects: newImage.projects.map(p => ({
+                        name: p.name || "unsorted",
+                        date: getFinalDate(p.date),
+                    })),
                     url: uploadedUrl,
                     thumbnailUrl: uploadedThumbnailUrl,
-                    category: newImage.category || "unsorted",
+                    id: newId,
                 };
                 console.log({ toUpload });
                 await axios.put(`/api/image?auth=${user.token}`, toUpload);

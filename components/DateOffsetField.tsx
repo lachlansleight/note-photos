@@ -32,8 +32,8 @@ const DateOffsetField = ({
     }, [value, onChange]);
 
     return (
-        <div className={`w-full flex items-center ${className}`}>
-            <label className="w-24">{label}</label>
+        <div className={`w-full flex flex-col ${className}`}>
+            <label className="w-24 text-xs">{label}</label>
             <div className="flex flex-grow justify-between gap-1">
                 <button
                     disabled={!isValid}

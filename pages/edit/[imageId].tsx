@@ -25,10 +25,10 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
         height: image.height || 0,
         size: image.size || 0,
         type: image.type || "",
-        date: image.date || dayjs().startOf("day").toDate(),
-        category: (image.category === "unsorted" ? "" : image.category) || "",
-        tags: image.tags || [],
-        note: image.note || "",
+        projects: image.projects.map(p => ({
+            ...p,
+            name: p.name === "unsorted" ? "" : p.name,
+        })) || [{ name: "", date: dayjs().startOf("day").toDate() }],
     });
     const [error, setError] = useState("");
     const [file, setFile] = useState<{ file: Blob; thumbnail: Blob } | null>(null);
@@ -40,9 +40,11 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
             setError("Not authenticated!");
             return;
         }
-        if (!dayjs(newImage.date).isValid()) {
-            setError("Invalid date!");
-            return;
+        for (let i = 0; i < newImage.projects.length; i++) {
+            if (!dayjs(newImage.projects[i].date).isValid()) {
+                setError("Invalid date!");
+                return;
+            }
         }
         setError("");
         const doUpload = async () => {
@@ -65,14 +67,19 @@ const EditPage = ({ image }: { image: NoteImage }): JSX.Element => {
                 } else {
                     setUploadCount(2);
                 }
-                const finalDate = dayjs(newImage.date);
-                finalDate.set("hour", dayjs().hour());
-                finalDate.set("minute", dayjs().minute());
-                finalDate.set("second", dayjs().second());
+                const getFinalDate = (date: Date) => {
+                    const finalDate = dayjs(date);
+                    finalDate.set("hour", dayjs().hour());
+                    finalDate.set("minute", dayjs().minute());
+                    finalDate.set("second", dayjs().second());
+                    return finalDate.toDate();
+                };
                 const toUpload: NoteImage = {
                     ...newImage,
-                    date: finalDate.toDate(),
-                    category: newImage.category || "unsorted",
+                    projects: newImage.projects.map(p => ({
+                        name: p.name || "unsorted",
+                        date: getFinalDate(p.date),
+                    })),
                     url,
                     thumbnailUrl,
                 };

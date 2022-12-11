@@ -37,6 +37,8 @@ const CalendarView = ({
     const cells = useMemo(() => {
         return Array.from({ length: dayCount }).map((_, i) => {
             const day = dayjs(minDay).add(i, "day");
+            const isFirst = day.date() === 1;
+            const isLast = day.add(1, "day").date() === 1;
             const dateValues = values.filter(v => dayjs(v.date).isSame(day, "day"));
             const tier =
                 dateValues.length < 3
@@ -50,11 +52,11 @@ const CalendarView = ({
             return (
                 <div
                     key={i}
-                    className={`w-3 h-3 bg-neutral-800 border-white border-opacity-40 ${
+                    className={`w-3 h-3 bg-neutral-800 border-white border-opacity-10 ${
                         dateValues.length > 0
-                            ? "cursor-pointer hover:bg-neutral-700 hover:border"
+                            ? "cursor-pointer hover:bg-neutral-700 hover:outline"
                             : ""
-                    }`}
+                    } ${isFirst ? "border-l border-t" : ""} ${isLast ? "border-r border-b" : ""}`}
                     title={`${day.format("DD MMMM YY")}${
                         dateValues.length > 0 ? ` - ${dateValues.length} pages` : ""
                     }`}

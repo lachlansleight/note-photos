@@ -1,14 +1,12 @@
 import dayjs from "dayjs";
 import CustomParseFormat from "dayjs/plugin/customParseFormat";
 import * as imageConversion from "image-conversion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FaRedo } from "react-icons/fa";
-import { LocalNoteImage } from "lib/types";
+import { LocalNoteImage, Project } from "lib/types";
 import FirebaseUtils from "lib/FirebaseUtils";
-import TagsField from "./controls/TagsField";
-import TextField from "./controls/TextField";
 import Button from "./controls/Button";
-import DateOffsetField from "./DateOffsetField";
+import ProjectField from "./ProjectField";
 
 dayjs.extend(CustomParseFormat);
 
@@ -39,14 +37,13 @@ const PhotoForm = ({
 
     const [rawUrl, setRawUrl] = useState("");
     const [url, setUrl] = useState("");
-    const [dateString, setDateString] = useState(dayjs(value.date).format("DD/MM/YYYY"));
-    const isValid = useMemo(() => dayjs(dateString, "DD/MM/YYYY").isValid(), [dateString]);
+    const [isValid, setIsValid] = useState([true]);
+    const isAllValid = () => isValid.reduce((a, b) => a && b, true);
 
     const [rawFile, setRawFile] = useState<File | null>(null);
     const [rotationIndex, setRotationIndex] = useState(0);
 
     useEffect(() => {
-        console.log(imgRef.current, file);
         if (!imgRef.current) return;
         setTimeout(() => {
             onChange({
@@ -58,13 +55,6 @@ const PhotoForm = ({
             });
         }, 250);
     }, [file, imgRef]);
-
-    useEffect(() => {
-        const isValid = dayjs(dateString, "DD/MM/YYYY").isValid();
-        if (isValid) {
-            onChange({ ...value, date: dayjs(dateString, "DD/MM/YYYY").startOf("day").toDate() });
-        }
-    }, [dateString]);
 
     const [naturalDimensions, setNaturalDimensions] = useState({ width: 0, height: 0 });
     const [finalDimensions, setFinalDimensions] = useState({ width: 0, height: 0 });
@@ -184,10 +174,73 @@ const PhotoForm = ({
                     )}
                 </div>
             </div>
-            <div className="flex flex-col gap-2 mt-8">
-                {error && <p className="text-red-300">{error}</p>}
+            {error && <p className="text-red-300">{error}</p>}
+            <div className="flex flex-col md:flex-row marker:justify-between">
+                <div className="flex flex-col gap-2 mt-8">
+                    <div>
+                        <h3 className="text-xl">Projects on this page</h3>
+                        <div className="flex flex-col gap-2">
+                            {value.projects &&
+                                value.projects.map((p, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <ProjectField
+                                            value={p}
+                                            onChange={newProject => {
+                                                onChange({
+                                                    ...value,
+                                                    projects: value.projects.map((q, j) =>
+                                                        i === j ? newProject : q
+                                                    ),
+                                                });
+                                            }}
+                                            onIsValidChange={isValid => {
+                                                setIsValid(cur =>
+                                                    cur.map((v, j) => (i === j ? isValid : v))
+                                                );
+                                            }}
+                                            onDeleteClicked={() => {
+                                                const newProjects: Project[] = [];
+                                                const newIsValid: boolean[] = [];
+                                                for (let j = 0; j < value.projects.length; j++) {
+                                                    if (j !== i)
+                                                        newProjects.push(value.projects[j]);
+                                                    if (j !== i) newIsValid.push(isValid[j]);
+                                                }
+                                                onChange({
+                                                    ...value,
+                                                    projects: newProjects,
+                                                });
+                                                setIsValid(newIsValid);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            <Button
+                                className="bg-neutral-600 rounded px-2 py-1 w-48"
+                                onClick={() => {
+                                    onChange({
+                                        ...value,
+                                        projects: [
+                                            ...value.projects,
+                                            {
+                                                name: "",
+                                                date:
+                                                    value.projects.length > 0
+                                                        ? value.projects.slice(-1)[0].date
+                                                        : new Date(),
+                                            },
+                                        ],
+                                    });
+                                    setIsValid(cur => [...cur, true]);
+                                }}
+                            >
+                                Add Project
+                            </Button>
+                        </div>
+                    </div>
+                </div>
                 {url && canChangeFile && (
-                    <div className="flex gap-4 justify-center">
+                    <div className="flex gap-4 justify-center mt-4">
                         <button
                             className="text-2xl bg-neutral-700 rounded p-2"
                             onClick={() => {
@@ -224,46 +277,31 @@ const PhotoForm = ({
                         </button>
                     </div>
                 )}
-                <DateOffsetField label="Date" value={dateString} onChange={setDateString} />
-                <TextField
-                    label="Category"
-                    value={value.category}
-                    placeholder={"Unsorted"}
-                    onChange={s => onChange({ ...value, category: s })}
-                />
-                <TagsField
-                    label="Tags"
-                    value={value.tags}
-                    onChange={s => onChange({ ...value, tags: s })}
-                />
-                <TextField
-                    label="Note"
-                    value={value.note || ""}
-                    onChange={s => onChange({ ...value, note: s })}
-                />
-                <div className="flex flex-col gap-4 pl-24 mt-8">
-                    <Button
-                        className={`px-2 py-1 rounded text-lg ${
-                            isValid ? "bg-primary-800" : "bg-gray-500"
-                        }`}
-                        onClick={() => {
-                            if (onSubmit) onSubmit();
-                        }}
-                    >
-                        Upload
-                    </Button>
-                    <Button
-                        className="mx-12 px-2 py-1 rounded bg-red-800 bg-opacity-50 text-md"
-                        onClick={() => {
-                            if (!window.confirm("Discard photo and all entered data?")) return;
-                            if (onCancel) onCancel();
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    {error && <p className="text-center text-red-300">{error}</p>}
-                </div>
             </div>
+            <div className="flex flex-col gap-4 pl-24 mt-8">
+                <Button
+                    className={`px-2 py-1 rounded text-lg ${
+                        isAllValid() ? "bg-primary-800" : "bg-gray-500"
+                    }`}
+                    onClick={() => {
+                        if (onSubmit) onSubmit();
+                    }}
+                >
+                    Upload
+                </Button>
+                <Button
+                    className="mx-12 px-2 py-1 rounded bg-red-800 bg-opacity-50 text-md"
+                    onClick={() => {
+                        if (!window.confirm("Discard photo and all entered data?")) return;
+                        if (onCancel) onCancel();
+                    }}
+                >
+                    Cancel
+                </Button>
+                {error && <p className="text-center text-red-300">{error}</p>}
+            </div>
+            {/* <pre>{JSON.stringify(isValid, null, 2)}</pre>
+            <pre>{JSON.stringify(value, null, 2)}</pre> */}
         </div>
     );
 };
