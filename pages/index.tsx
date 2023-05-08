@@ -11,9 +11,12 @@ import SelectField from "components/SelectField";
 import useDimensions from "lib/hooks/useDimensions";
 import CalendarView from "components/CalendarView";
 import NoteImageBuffer from "components/NoteImageBuffer";
+import useKeyboard from "lib/hooks/useKeyboard";
+import CheckboxField from "components/controls/CheckboxField";
+import useAuth from "lib/hooks/useAuth";
 
 const PhotosPage = (): JSX.Element => {
-    // const { user } = useAuth();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [images, setImages] = useState<NoteImage[]>([]);
     const [filteredImages, setFilteredImages] = useState<NoteImage[]>([]);
@@ -21,6 +24,15 @@ const PhotosPage = (): JSX.Element => {
     // const [showingGrid, setShowingGrid] = useState(false);
     const { width } = useDimensions();
     const [page, setPage] = useState(0);
+    const [editMode, setEditMode] = useState(false);
+
+    useKeyboard(e => {
+        if (e.key === "ArrowLeft") {
+            setPage(cur => Math.max(cur - 1, 0));
+        } else if (e.key === "ArrowRight") {
+            setPage(cur => Math.min(cur + 1, Math.ceil(filteredImages.length / 2)));
+        }
+    }, []);
 
     useEffect(() => {
         const doLoad = async () => {
@@ -139,12 +151,27 @@ const PhotosPage = (): JSX.Element => {
     const allDates = useMemo(() => {
         const dates: { date: Date }[] = [];
         filteredImages.forEach(image => {
+            const imageDates: string[] = [];
             image.projects.forEach(project => {
-                dates.push({ date: project.date });
+                const dateString = dayjs(project.date).format("YYYY-MM-DD");
+                if (!imageDates.includes(dateString)) imageDates.push(dateString);
+            });
+            imageDates.forEach(dateString => {
+                dates.push({ date: new Date(dateString) });
             });
         });
         return dates;
     }, [filteredImages]);
+
+    const years = useMemo(() => {
+        const years: number[] = [];
+        allDates.forEach(date => {
+            const year = date.date.getFullYear();
+            if (!years.includes(year)) years.push(year);
+        });
+        years.reverse();
+        return years;
+    }, [allDates]);
 
     return (
         <Layout>
@@ -184,16 +211,24 @@ const PhotosPage = (): JSX.Element => {
                             />
                         )}
                     </Head>
-                    <SelectField
-                        label="Category"
-                        value={categories.indexOf(filterCategory)}
-                        options={categorySelectOptions}
-                        onChange={val => setFilterCategory(val === -1 ? "" : categories[val])}
-                    />
+                    <div className="flex gap-4 w-full">
+                        <SelectField
+                            label="Category"
+                            value={categories.indexOf(filterCategory)}
+                            options={categorySelectOptions}
+                            onChange={val => setFilterCategory(val === -1 ? "" : categories[val])}
+                            className="flex-grow"
+                        />
+                        {user && (
+                            <CheckboxField label="Edit" value={editMode} onChange={setEditMode} />
+                        )}
+                    </div>
                     <div className="grid grid-cols-2 gap-2 mb-8">
                         <NoteImageBuffer
                             note={filteredImages[page * 2 - 2]}
-                            width={500}
+                            width={750}
+                            showEditor={editMode}
+                            align={"right"}
                             onEditSuccess={v => {
                                 setImages(cur => cur.map(i => (i.id === v.id ? v : i)));
                                 setFilteredImages(cur => cur.map(i => (i.id === v.id ? v : i)));
@@ -202,7 +237,8 @@ const PhotosPage = (): JSX.Element => {
                         {filteredImages.length > page * 2 - 1 ? (
                             <NoteImageBuffer
                                 note={filteredImages[page * 2 - 1]}
-                                width={500}
+                                width={750}
+                                showEditor={editMode}
                                 onEditSuccess={v => {
                                     setImages(cur => cur.map(i => (i.id === v.id ? v : i)));
                                     setFilteredImages(cur => cur.map(i => (i.id === v.id ? v : i)));
@@ -251,10 +287,14 @@ const PhotosPage = (): JSX.Element => {
                     />
 
                     <div className="flex-col justify-center hidden md:flex">
-                        <CalendarView year={2022} values={allDates} onDayClick={goToPageOf} />
-                        <CalendarView year={2021} values={allDates} onDayClick={goToPageOf} />
-                        <CalendarView year={2020} values={allDates} onDayClick={goToPageOf} />
-                        <CalendarView year={2019} values={allDates} onDayClick={goToPageOf} />
+                        {years.map(year => (
+                            <CalendarView
+                                key={year}
+                                year={year}
+                                values={allDates}
+                                onDayClick={goToPageOf}
+                            />
+                        ))}
                     </div>
 
                     {/* <NoteFixup notes={images} /> */}

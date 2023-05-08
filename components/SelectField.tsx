@@ -5,6 +5,7 @@ const SelectField = ({
     label,
     error,
     disabled,
+    className = "",
 }: {
     value: number;
     onChange: (val: number) => void;
@@ -17,7 +18,7 @@ const SelectField = ({
     className?: string;
 }): JSX.Element => {
     return (
-        <div className="flex flex-col">
+        <div className={`flex flex-col ${className}`}>
             <label className="text-white text-opacity-50 text-xs">{label || " "}</label>
             <select
                 value={value}

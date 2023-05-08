@@ -10,10 +10,14 @@ import Button from "./controls/Button";
 const NoteImageBuffer = ({
     note,
     width,
+    showEditor,
+    align = "left",
     onEditSuccess,
 }: {
     note: NoteImage;
     width: number;
+    showEditor: boolean;
+    align?: "left" | "right";
     onEditSuccess?: (newValue: NoteImage) => void;
 }): JSX.Element => {
     const { user } = useAuth();
@@ -51,7 +55,9 @@ const NoteImageBuffer = ({
         <>
             <div>
                 <div
-                    className="relative"
+                    className={`relative flex ${
+                        align === "right" ? "justify-end" : "justify-start"
+                    }`}
                     style={
                         {
                             // marginBottom: `calc(1.75rem + ${3 * value.projects.length}rem + 2rem + 0.5rem)`
@@ -63,7 +69,7 @@ const NoteImageBuffer = ({
                         width={width}
                         height={Math.round(width * (note.height / note.width))}
                     />
-                    {user && (
+                    {user && showEditor && (
                         <div
                             className={`absolute z-20 left-0 top-0 w-full h-full bg-black flex flex-col justify-between ${
                                 menu ? "bg-opacity-80" : "bg-opacity-0"
@@ -117,65 +123,68 @@ const NoteImageBuffer = ({
                         </div>
                     )}
                 </div>
-                <div className="">
-                    <div className="flex flex-col gap-2">
-                        {value.projects &&
-                            value.projects.map((p, i) => (
-                                <div key={i} className="flex gap-4">
-                                    <ProjectField
-                                        value={p}
-                                        onChange={newProject => {
-                                            setValue({
-                                                ...value,
-                                                projects: value.projects.map((q, j) =>
-                                                    i === j ? newProject : q
-                                                ),
-                                            });
-                                        }}
-                                        onIsValidChange={isValid => {
-                                            setIsValid(cur =>
-                                                cur.map((v, j) => (i === j ? isValid : v))
-                                            );
-                                        }}
-                                        onDeleteClicked={() => {
-                                            const newProjects: Project[] = [];
-                                            const newIsValid: boolean[] = [];
-                                            for (let j = 0; j < value.projects.length; j++) {
-                                                if (j !== i) newProjects.push(value.projects[j]);
-                                                if (j !== i) newIsValid.push(isValid[j]);
-                                            }
-                                            setValue({
-                                                ...value,
-                                                projects: newProjects,
-                                            });
-                                            setIsValid(newIsValid);
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                        <Button
-                            className="bg-neutral-600 rounded px-2 py-1 w-48"
-                            onClick={() => {
-                                setValue({
-                                    ...value,
-                                    projects: [
-                                        ...value.projects,
-                                        {
-                                            name: "",
-                                            date:
-                                                value.projects.length > 0
-                                                    ? value.projects.slice(-1)[0].date
-                                                    : new Date(),
-                                        },
-                                    ],
-                                });
-                                setIsValid(cur => [...cur, true]);
-                            }}
-                        >
-                            Add Project
-                        </Button>
+                {user && showEditor && (
+                    <div className="">
+                        <div className="flex flex-col gap-2">
+                            {value.projects &&
+                                value.projects.map((p, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <ProjectField
+                                            value={p}
+                                            onChange={newProject => {
+                                                setValue({
+                                                    ...value,
+                                                    projects: value.projects.map((q, j) =>
+                                                        i === j ? newProject : q
+                                                    ),
+                                                });
+                                            }}
+                                            onIsValidChange={isValid => {
+                                                setIsValid(cur =>
+                                                    cur.map((v, j) => (i === j ? isValid : v))
+                                                );
+                                            }}
+                                            onDeleteClicked={() => {
+                                                const newProjects: Project[] = [];
+                                                const newIsValid: boolean[] = [];
+                                                for (let j = 0; j < value.projects.length; j++) {
+                                                    if (j !== i)
+                                                        newProjects.push(value.projects[j]);
+                                                    if (j !== i) newIsValid.push(isValid[j]);
+                                                }
+                                                setValue({
+                                                    ...value,
+                                                    projects: newProjects,
+                                                });
+                                                setIsValid(newIsValid);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            <Button
+                                className="bg-neutral-600 rounded px-2 py-1 w-48"
+                                onClick={() => {
+                                    setValue({
+                                        ...value,
+                                        projects: [
+                                            ...value.projects,
+                                            {
+                                                name: "",
+                                                date:
+                                                    value.projects.length > 0
+                                                        ? value.projects.slice(-1)[0].date
+                                                        : new Date(),
+                                            },
+                                        ],
+                                    });
+                                    setIsValid(cur => [...cur, true]);
+                                }}
+                            >
+                                Add Project
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </>
     );
