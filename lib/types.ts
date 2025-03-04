@@ -1,9 +1,17 @@
+export interface LlmTranscription {
+    rawText: string;
+    tagline: string;
+    dotPoints: string[];
+    images?: string[];
+}
+
 export interface LocalNoteImage {
     width: number;
     height: number;
     size: number;
     type: string;
     projects: Project[];
+    transcription?: LlmTranscription;
 }
 
 export interface NoteImage extends LocalNoteImage {

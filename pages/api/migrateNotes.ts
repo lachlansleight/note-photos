@@ -93,7 +93,7 @@ api.get = async (req, res) => {
         console.log("Created note page", createData.id);
     }
 
-    res.json({ projectNames, missingNames, actualProjects });
+    res.json({ projectNames, existingNotes, missingNotes });
 };
 
 export default (req: NextApiRequest, res: NextApiResponse) => api.handle(req, res);

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { FaEllipsisV } from "react-icons/fa";
+import { FaEllipsisV, FaSync } from "react-icons/fa";
 import dayjs from "dayjs";
 import axios from "axios";
-import { NoteImage, Project } from "lib/types";
+import { LlmTranscription, NoteImage, Project } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import ProjectField from "./ProjectField";
 import Button from "./controls/Button";
+import Markdown from "react-markdown";
 
 const NoteImageBuffer = ({
     note,
@@ -26,6 +27,8 @@ const NoteImageBuffer = ({
     const [isValid, setIsValid] = useState([true]);
     const isAllValid = () => isValid.reduce((a, b) => a && b, true);
     const [loading, setLoading] = useState(false);
+    const [loadingTranscription, setLoadingTranscription] = useState(false);
+    const [showingTranscription, setShowingTranscription] = useState(true);
 
     useEffect(() => {
         if (note.id === value.id) return;
@@ -51,6 +54,44 @@ const NoteImageBuffer = ({
         setLoading(false);
     }, [loading, value, user, onEditSuccess]);
 
+    const getTranscription = useCallback(async () => {
+        if (!isAllValid()) return;
+        if (loadingTranscription) return;
+        if (!user) return;
+        setLoadingTranscription(true);
+
+        let transcription: LlmTranscription | null = null;
+        let startingTranscription = note.transcription?.rawText;
+
+        try {
+            //doesn't return the result, we need to poll
+            await axios.get("/api/transcribe?force=true&id=" + note.id);
+            let attempt = 0;
+            while(attempt < 30) {
+                const testResponse = await axios("/api/image?id=" + note.id);
+                if(testResponse.data.transcription && testResponse.data.transcription.rawText !== startingTranscription) {
+                    transcription = testResponse.data.transcription;
+                    break;
+                }
+                await new Promise(r => setTimeout(r, 3000));
+                attempt++;
+            }
+            if(transcription) {
+                onEditSuccess?.({
+                    ...note,
+                    transcription,
+                });
+                console.log("Transcription Result!", transcription);
+            } else {
+                console.error("Failed to get transcription after " + attempt + " attempts");
+            }
+            setLoadingTranscription(false);
+        } catch (error: any) {
+            console.error(error);
+            setLoadingTranscription(false);
+        }
+    }, [loadingTranscription, note, value, user, onEditSuccess]);
+
     return (
         <>
             <div>
@@ -64,11 +105,37 @@ const NoteImageBuffer = ({
                         }
                     }
                 >
+                    {user && showEditor && (
+                        <Button
+                            className="absolute bottom-0 left-6 bg-purple-600 rounded px-2 py-1 w-48 z-[25]"
+                            disabled={loadingTranscription}
+                            onClick={() => {
+                                getTranscription();
+                            }}
+                        >
+                            {loadingTranscription ? <FaSync className="animate-spin" /> : "Get Transcription"}
+                        </Button>
+                    )}
                     <img
                         src={note.url}
                         width={width}
                         height={Math.round(width * (note.height / note.width))}
+                        onMouseEnter={() => setShowingTranscription(false)}
+                        onMouseLeave={() => setShowingTranscription(true)}
                     />
+                    {(showingTranscription && note.transcription) && (
+                        <div className="bg-black bg-opacity-80 text-white p-[50px] absolute left-0 top-0 w-full h-full flex flex-col gap-4 z-[19] pointer-events-none">
+                            <h1 className="text-[35px] font-semibold leading-[45px] text-center">{note.transcription.tagline || ""}</h1>
+                            <ul className="flex flex-col gap-2 text-[20px] text-center">
+                                {note.transcription.dotPoints?.map((point, i) => (
+                                    <li key={i} className="">{point}</li>
+                                ))}
+                            </ul>
+                            <div className="text-[12px]">
+                                <Markdown>{note.transcription.rawText || ""}</Markdown>
+                            </div>
+                        </div>
+                    )}
                     {user && showEditor && (
                         <div
                             className={`absolute z-20 left-0 top-0 w-full h-full bg-black flex flex-col justify-between ${

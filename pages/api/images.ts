@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 import { NoteImage } from "lib/types";
 
-export const getImages = async (): Promise<NoteImage> => {
+export const getImages = async (): Promise<Record<string, NoteImage>> => {
     try {
         const image: any = await axios(
             `${process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL}/images.json`

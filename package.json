@@ -13,7 +13,7 @@
         "test:watch": "jest --watchAll"
     },
     "dependencies": {
-        "@prisma/client": "^4.7.0",
+        "@prisma/client": "^5.6.0",
         "axios": "latest",
         "dayjs": "latest",
         "firebase": "latest",
@@ -22,7 +22,8 @@
         "next": "latest",
         "react": "latest",
         "react-dom": "latest",
-        "react-icons": "^4.4.0"
+        "react-icons": "^4.4.0",
+        "react-markdown": "^10.0.1"
     },
     "devDependencies": {
         "@testing-library/react": "latest",
@@ -44,7 +45,7 @@
         "lint-staged": "latest",
         "postcss": "latest",
         "prettier": "latest",
-        "prisma": "^4.7.0",
+        "prisma": "^5.6.0",
         "tailwindcss": "latest",
         "typescript": "latest"
     }
