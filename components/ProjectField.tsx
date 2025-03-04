@@ -8,11 +8,13 @@ import DateOffsetField from "./DateOffsetField";
 const ProjectField = ({
     value,
     onChange,
+    weeklogProjects = [],
     onIsValidChange,
     onDeleteClicked,
 }: {
     value: Project;
     onChange: (newVal: Project) => void;
+    weeklogProjects?: { id: number; slug: string; name: string }[];
     onIsValidChange: (val: boolean) => void;
     onDeleteClicked: () => void;
 }): JSX.Element => {
@@ -48,6 +50,9 @@ const ProjectField = ({
                 placeholder={"Unsorted"}
                 onChange={setNameString}
             />
+            {nameString && weeklogProjects.findIndex(p => p.name === nameString) === -1 && (
+                <span className="text-red-300 text-xs">Not a Weeklog project</span>
+            )}
             <DateOffsetField label="Date" value={dateString} onChange={setDateString} />
             <Button
                 className="bg-neutral-700 grid place-items-center md:mt-4 rounded px-3 py-1"

@@ -19,6 +19,7 @@ const PhotoForm = ({
     onFileChange,
     onCancel,
     onSubmit,
+    weeklogProjects = [],
     error = "",
     canChangeFile = true,
     knownId = "",
@@ -29,6 +30,7 @@ const PhotoForm = ({
     onFileChange?: (data: { file: Blob; thumbnail: Blob }) => void;
     onCancel?: () => void;
     onSubmit?: () => void;
+    weeklogProjects?: { id: number; slug: string; name: string }[];
     error?: string;
     canChangeFile?: boolean;
     knownId?: string;
@@ -143,7 +145,7 @@ const PhotoForm = ({
                     }`}
                     onLoad={tryGetDimensions}
                 />
-                <div className="absolute left-0 top-0 h-full w-full z-10 grid place-items-center">
+                <div className="absolute left-0 top-0 h-full w-full z-10 flex flex-col gap-2 justify-center items-center">
                     {canChangeFile ? (
                         <>
                             <label
@@ -172,6 +174,33 @@ const PhotoForm = ({
                     ) : (
                         <p className="text-2xl">No image file!</p>
                     )}
+                    {canChangeFile ? (
+                        <>
+                            <label
+                                className="text-4xl px-8 py-2 bg-primary-800 rounded"
+                                htmlFor="photoB"
+                            >
+                                {url ? "Reselect Image" : "Select Image"}
+                            </label>
+                            <input
+                                id="photoB"
+                                className="text-2xl"
+                                type="file"
+                                //accept="image/*"
+                                hidden={true}
+                                onChange={e => {
+                                    if (e.target.files == null) return;
+                                    if (e.target.files.length === 0) return;
+                                    setHasChangedFile(true);
+                                    setRawFile(e.target.files[0]);
+                                }}
+                            />
+                        </>
+                    ) : url ? (
+                        <></>
+                    ) : (
+                        <p className="text-2xl">No image file!</p>
+                    )}
                 </div>
             </div>
             {error && <p className="text-red-300">{error}</p>}
@@ -185,6 +214,7 @@ const PhotoForm = ({
                                     <div key={i} className="flex gap-4">
                                         <ProjectField
                                             value={p}
+                                            weeklogProjects={weeklogProjects}
                                             onChange={newProject => {
                                                 onChange({
                                                     ...value,

@@ -1,0 +1,245 @@
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model SiteConfig {
+  id     Int  @id @default(autoincrement())
+  config Json @default("{}")
+}
+
+//The main data structure - contains everything else, the top-level hierarchical organization unit
+model Project {
+  //uniques
+  id         Int     @id @default(autoincrement())
+  firebaseId String? @unique
+  slug       String  @unique
+
+  //Relations
+  efforts     Effort[]
+  firstEffort Effort?  @relation(name: "FirstEffort")
+  lastEffort  Effort?  @relation(name: "LastEffort")
+  media       Media[]
+
+  //data
+  name      String   @unique
+  tagline   String?
+  content   String?
+  tags      String[]
+  createdAt DateTime @default(now())
+  tasks     Json     @default("[]")
+
+  //config
+  visibility             Visibility @default(OPEN)
+  isFeatured             Boolean    @default(false)
+  isTrashed              Boolean    @default(false)
+  defaultEffortThreshold Int        @default(10)
+  Note                   Note[]
+}
+
+enum Visibility {
+  OPEN
+  SECRET
+  TOPSECRET
+  HIDDEN
+}
+
+//Groupings of Entries
+model Effort {
+  //uniques
+  id         Int     @id @default(autoincrement())
+  firebaseId String? @unique
+  slug       String  @unique
+
+  //references
+  project         Project  @relation(fields: [projectId], references: [id])
+  projectId       Int
+  firstEffortOf   Project? @relation("FirstEffort", fields: [firstEffortOfId], references: [id])
+  firstEffortOfId Int?     @unique
+  lastEffortOf    Project? @relation("LastEffort", fields: [lastEffortOfId], references: [id])
+  lastEffortOfId  Int?     @unique
+
+  entries    Entry[]
+  firstEntry Entry?  @relation(name: "FirstEntry")
+  lastEntry  Entry?  @relation(name: "LastEntry")
+  media      Media[]
+
+  //data
+  title     String
+  content   String?
+  tags      String[]
+  createdAt DateTime @default(now())
+
+  //config
+  visibility Visibility @default(OPEN)
+  isFeatured Boolean    @default(false)
+  isTrashed  Boolean    @default(false)
+  threshold  Int        @default(10)
+}
+
+//Journal entries for projects, mostly a container for markdown text content and images
+model Entry {
+  //uniques
+  id         Int     @id @default(autoincrement())
+  firebaseId String? @unique
+  slug       String  @unique
+
+  //references
+  effort         Effort  @relation(fields: [effortId], references: [id])
+  effortId       Int
+  firstEntryOf   Effort? @relation("FirstEntry", fields: [firstEntryOfId], references: [id])
+  firstEntryOfId Int?    @unique
+  lastEntryOf    Effort? @relation("LastEntry", fields: [lastEntryOfId], references: [id])
+  lastEntryOfId  Int?    @unique
+  media          Media[]
+
+  //data
+  title     String
+  content   String?
+  wordCount Int      @default(0)
+  tags      String[]
+  createdAt DateTime @default(now())
+
+  //config
+  visibility Visibility @default(OPEN)
+  isFeatured Boolean    @default(false)
+  isTrashed  Boolean    @default(false)
+}
+
+//Catch-all for images, videos and other types of uploadable and embeddable rich media content
+model Media {
+  //uniques
+  id Int @id @default(autoincrement())
+
+  //for everything
+  type           MediaType
+  width          Int
+  height         Int
+  thumbnailS3Key String
+  thumbnailUrl   String
+  caption        String?
+
+  //images
+  alt String?
+
+  //videos
+  duration        Float?
+  posterS3Key     String?
+  posterUrl       String?
+  posterTimestamp Float?
+
+  //uploads
+  uploadUrl String?
+  fileType  String?
+  filename  String?
+  s3Key     String?
+  size      Int?
+
+  //embeds
+  embedProvider String?
+  embedUrl      String?
+  embedConfig   Json?
+
+  //references
+  Project Project[]
+  Effort  Effort[]
+  Entry   Entry[]
+}
+
+enum MediaType {
+  NONE
+  UPLOAD_IMAGE
+  UPLOAD_VIDEO
+  EMBED_IMAGE
+  EMBED_VIDEO
+}
+
+model NotePage {
+  id             Int    @id @default(autoincrement())
+  width          Int
+  height         Int
+  thumbnailS3Key String
+  thumbnailUrl   String
+  s3Key          String
+  url            String
+  fileType       String
+  filename       String
+  size           Int
+  notes          Note[]
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  category  String
+  page      NotePage @relation(fields: [pageId], references: [id])
+  pageId    Int
+  project   Project? @relation(fields: [projectId], references: [id])
+  projectId Int?
+  createdAt DateTime
+}
+
+//----------------------------------------------------------
+//----------------------------------------------------------
+//                   NEXTAUTH STUFF
+//----------------------------------------------------------
+//----------------------------------------------------------
+
+model account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model user {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      account[]
+  sessions      session[]
+
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @default(now()) @map(name: "updated_at")
+}
+
+model verificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Role {
+  USER
+  AUTHOR
+  ADMIN
+}

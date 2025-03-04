@@ -8,10 +8,15 @@ import PhotoForm from "components/ImageForm";
 import { LocalNoteImage, NoteImage } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import FirebaseUtils from "lib/FirebaseUtils";
+import { getProjectList } from "./api/projects";
 
 dayjs.extend(CustomParseFormat);
 
-const UploadPage = (): JSX.Element => {
+const UploadPage = ({
+    weeklogProjects,
+}: {
+    weeklogProjects: { id: number; slug: string; name: string }[];
+}): JSX.Element => {
     const { user } = useAuth();
     const [file, setFile] = useState<{ file: Blob; thumbnail: Blob } | null>(null);
     const [newImage, setNewImage] = useState<LocalNoteImage>({
@@ -70,8 +75,15 @@ const UploadPage = (): JSX.Element => {
             setUploadCount(0);
 
             try {
-                const newId: string = (await axios.post(`/api/image?auth=${user.token}`, {})).data
-                    .id;
+                const newId: string = (
+                    await axios.post(
+                        `/api/image?auth=${user.token}`,
+                        {},
+                        {
+                            timeout: 5000,
+                        }
+                    )
+                ).data.id;
                 console.log({ newId });
                 setUploadCount(1);
                 const uploadedUrl = await FirebaseUtils.uploadBytes(file.file, `/images/${newId}`);
@@ -111,6 +123,7 @@ const UploadPage = (): JSX.Element => {
                 console.error(e);
                 setError(e?.message || "unknown error");
                 setPhase("form");
+                setUploadCount(0);
             }
         };
 
@@ -123,6 +136,7 @@ const UploadPage = (): JSX.Element => {
                 <PhotoForm
                     value={newImage}
                     onChange={setNewImage}
+                    weeklogProjects={weeklogProjects}
                     file={file}
                     onFileChange={setFile}
                     onCancel={restart}
@@ -168,12 +182,13 @@ const UploadPage = (): JSX.Element => {
 
 export default UploadPage;
 
-/*
-//Leaving this here so that I don't have to keep looking up the syntax...
-import { GetServerSidePropsContext } from "next/types";
-export async function getServerSideProps(ctx: GetServerSidePropsContext): Promise<{ props: any }> {
+export async function getServerSideProps(): Promise<{
+    props: { weeklogProjects: { id: number; slug: string; name: string }[] };
+}> {
+    const projects = await getProjectList();
     return {
-        props: {  },
+        props: {
+            weeklogProjects: projects,
+        },
     };
 }
-*/
