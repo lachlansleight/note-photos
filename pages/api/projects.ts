@@ -1,17 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextRestApiRoute } from "lib/apiUtils";
 import Database from "lib/Database";
+import axios from "axios";
 
 export const getProjectList = async () => {
-    const projects = await Database.Instance().project.findMany({
-        select: {
-            id: true,
-            slug: true,
-            name: true,
-        },
+    const projects = (await axios(`${process.env.WEEKLOG_URL}/api/projects?email=${process.env.WEEKLOG_EMAIL}&password=${process.env.WEEKLOG_PASSWORD}`)).data;
+    return projects.map((p: any) => {
+        return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+        }
     });
-    await Database.disconnect();
-    return projects;
 };
 
 const api = new NextRestApiRoute("/projects");
