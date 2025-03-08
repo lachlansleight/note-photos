@@ -131,9 +131,9 @@ const NoteImageBuffer = ({
                                     <li key={i} className="">{point}</li>
                                 ))}
                             </ul>
-                            <div className="text-[12px]">
+                            {/* <div className="text-[12px]">
                                 <Markdown>{note.transcription.rawText || ""}</Markdown>
-                            </div>
+                            </div> */}
                         </div>
                     )}
                     {user && showEditor && (
