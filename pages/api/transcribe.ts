@@ -11,9 +11,12 @@ export const getParabrainTranscription = async (image: NoteImage, idToken: strin
     //...yes it does. I'm back now I made it work
 
     console.log("POSTing parabrain...");
-    const response = (await axios.post("http://localhost:4937/message?id=transcribeImage", {image, idToken}));
+    const response = await axios.post("http://localhost:4937/message?id=transcribeImage", {
+        image,
+        idToken,
+    });
     return response.data;
-}
+};
 
 const api = new NextRestApiRoute("/transcribe");
 api.get = async (req, res) => {
@@ -26,7 +29,8 @@ api.get = async (req, res) => {
     }
 
     const forceEvenIfTranscribed = req.query.force === "true";
-    const imageHasTranscription = image.transcription && image.transcription.tagline?.trim()?.length;
+    const imageHasTranscription =
+        image.transcription && image.transcription.tagline?.trim()?.length;
     if (imageHasTranscription && !forceEvenIfTranscribed) {
         console.log("Image is already transcribed and force mode is off");
         res.json(image.transcription);

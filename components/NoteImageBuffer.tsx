@@ -67,16 +67,19 @@ const NoteImageBuffer = ({
             //doesn't return the result, we need to poll
             await axios.get("/api/transcribe?force=true&id=" + note.id);
             let attempt = 0;
-            while(attempt < 30) {
+            while (attempt < 30) {
                 const testResponse = await axios("/api/image?id=" + note.id);
-                if(testResponse.data.transcription && testResponse.data.transcription.rawText !== startingTranscription) {
+                if (
+                    testResponse.data.transcription &&
+                    testResponse.data.transcription.rawText !== startingTranscription
+                ) {
                     transcription = testResponse.data.transcription;
                     break;
                 }
                 await new Promise(r => setTimeout(r, 3000));
                 attempt++;
             }
-            if(transcription) {
+            if (transcription) {
                 onEditSuccess?.({
                     ...note,
                     transcription,
@@ -113,7 +116,11 @@ const NoteImageBuffer = ({
                                 getTranscription();
                             }}
                         >
-                            {loadingTranscription ? <FaSync className="animate-spin" /> : "Get Transcription"}
+                            {loadingTranscription ? (
+                                <FaSync className="animate-spin" />
+                            ) : (
+                                "Get Transcription"
+                            )}
                         </Button>
                     )}
                     <img
@@ -123,12 +130,16 @@ const NoteImageBuffer = ({
                         onMouseEnter={() => setShowingTranscription(false)}
                         onMouseLeave={() => setShowingTranscription(true)}
                     />
-                    {(showingTranscription && note.transcription) && (
+                    {showingTranscription && note.transcription && (
                         <div className="bg-black bg-opacity-80 text-white p-[50px] absolute left-0 top-0 w-full h-full flex flex-col gap-4 z-[19] pointer-events-none">
-                            <h1 className="text-[35px] font-semibold leading-[45px] text-center">{note.transcription.tagline || ""}</h1>
+                            <h1 className="text-[35px] font-semibold leading-[45px] text-center">
+                                {note.transcription.tagline || ""}
+                            </h1>
                             <ul className="flex flex-col gap-2 text-[20px] text-center">
                                 {note.transcription.dotPoints?.map((point, i) => (
-                                    <li key={i} className="">{point}</li>
+                                    <li key={i} className="">
+                                        {point}
+                                    </li>
                                 ))}
                             </ul>
                             {/* <div className="text-[12px]">
