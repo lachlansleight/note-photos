@@ -6,7 +6,6 @@ import { LlmTranscription, NoteImage, Project } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import ProjectField from "./ProjectField";
 import Button from "./controls/Button";
-import Markdown from "react-markdown";
 
 const NoteImageBuffer = ({
     note,
@@ -61,7 +60,7 @@ const NoteImageBuffer = ({
         setLoadingTranscription(true);
 
         let transcription: LlmTranscription | null = null;
-        let startingTranscription = note.transcription?.rawText;
+        const startingTranscription = note.transcription?.rawText;
 
         try {
             //doesn't return the result, we need to poll

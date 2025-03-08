@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { NextRestApiRoute } from "lib/apiUtils";
-import Database from "lib/Database";
 import axios from "axios";
+import { NextRestApiRoute } from "lib/apiUtils";
 
 export const getProjectList = async () => {
     const projects = (

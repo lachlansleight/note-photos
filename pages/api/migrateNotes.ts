@@ -23,9 +23,9 @@ api.get = async (req, res) => {
         },
     });
 
-    const missingNames = projectNames.filter(
-        n => actualProjects.findIndex(p => p.name === n) === -1
-    );
+    // const missingNames = projectNames.filter(
+    //     n => actualProjects.findIndex(p => p.name === n) === -1
+    // );
 
     // const renames = {
     //     "Weeklog": "WeekLog",

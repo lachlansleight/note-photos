@@ -1,18 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
-import Head from "next/head";
 import Layout from "components/layout/Layout";
-import { ImageHasCategory, LlmTranscription, NoteImage } from "lib/types";
-// import ImageTile from "components/ImageTile";
-// import useAuth from "lib/hooks/useAuth";
-import Pagination from "components/Pagination";
-import SelectField from "components/SelectField";
-import useDimensions from "lib/hooks/useDimensions";
-import CalendarView from "components/CalendarView";
-import NoteImageBuffer from "components/NoteImageBuffer";
-import useKeyboard from "lib/hooks/useKeyboard";
-import CheckboxField from "components/controls/CheckboxField";
+import { LlmTranscription, NoteImage } from "lib/types";
 import useAuth from "lib/hooks/useAuth";
 import ProgressBar from "components/controls/ProgressBar";
 import Button from "components/controls/Button";
@@ -62,11 +52,11 @@ const PhotosPage = (): JSX.Element => {
             if (!user) return;
 
             let transcription: LlmTranscription | null = null;
-            let startingTranscription = note.transcription?.rawText;
+            const startingTranscription = note.transcription?.rawText;
 
             try {
                 //doesn't return the result, we need to poll
-                let message = `Transcribing note from ${dayjs(note.projects[0].date).format(
+                const message = `Transcribing note from ${dayjs(note.projects[0].date).format(
                     "DD MMMM YYYY"
                 )} (${note.projects.map(p => p.name).join(", ")})`;
                 setCurrentMessage(message);

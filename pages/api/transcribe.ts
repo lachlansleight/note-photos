@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { NextRestApiRoute } from "lib/apiUtils";
-import { getImage } from "./image";
-import { NoteImage } from "lib/types";
 import axios from "axios";
+import { NextRestApiRoute } from "lib/apiUtils";
+import { NoteImage } from "lib/types";
+import { getImage } from "./image";
 
 export const getParabrainTranscription = async (image: NoteImage, idToken: string) => {
     //todo - parabrain needs a receive post request first, otherwise I can't send the whole noteImage
